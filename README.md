@@ -83,7 +83,36 @@ go mod download
 3. Build the application:
 
 ```bash
+# Using Go directly
 go build -o githubcli ./cmd/githubcli
+
+# Or using the Makefile
+make build
+```
+
+4. Run commands using the Makefile (via Docker):
+
+```bash
+# Show available commands
+make help
+
+# The following commands will build the binary inside a Docker container
+# and execute the CLI commands in the same container
+
+# List repositories
+make list
+
+# List all repositories including archived and forked
+make list-all
+
+# List repositories in JSON format
+make list-json
+
+# Delete a repository (with confirmation prompt)
+make delete REPO=owner/repo
+
+# Delete a repository without confirmation
+make delete-force REPO=owner/repo
 ```
 
 ### Using Docker for Development
@@ -91,12 +120,18 @@ go build -o githubcli ./cmd/githubcli
 A Docker environment is provided for development and testing:
 
 ```bash
-# Build and run using Docker Compose
-docker-compose up -d
+# Run commands directly using the Makefile
+make list
+make delete REPO=owner/repo
 
-# Execute commands inside the container
-docker-compose exec app githubcli list
+# For hot reloading during development (using Air)
+make dev
+
+# Check Docker container status
+make status
 ```
+
+For more detailed development instructions, including hot reloading with Air, see the [DEVELOPMENT.md](DEVELOPMENT.md) file.
 
 ## License
 

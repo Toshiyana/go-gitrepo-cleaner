@@ -1,0 +1,35 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/go/src/app
+      - ${HOME}/.env:/root/.env:ro
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    working_dir: /go/src/app
+    # Override the entrypoint and command to allow for shell commands
+    entrypoint: []
+
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/go/src/app
+      - ${HOME}/.env:/root/.env:ro
+      - go-modules:/go/pkg/mod
+      - go-build-cache:/root/.cache/go-build
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    working_dir: /go/src/app
+    # Override the entrypoint and command for development
+    entrypoint: []
+    command: sh -c "apk add --no-cache git && go install github.com/cosmtrek/air@latest && air -c .air.toml"
+    tty: true
+    stdin_open: true
+
+volumes:
+  go-modules:
+  go-build-cache:

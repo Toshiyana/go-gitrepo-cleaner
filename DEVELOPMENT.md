@@ -6,6 +6,7 @@ This document provides instructions for developing and testing the GitHub Reposi
 
 - Go 1.24 or higher
 - Docker and Docker Compose (optional, for containerized development)
+- Docker Compose V2 (uses `docker compose` command format)
 - GitHub Personal Access Token with `repo` and `delete_repo` permissions
 
 ## Setting Up the Development Environment
@@ -35,7 +36,32 @@ GITHUB_TOKEN=your_github_token_here
 
 ### Method 1: Direct Development
 
-#### Building the Application
+#### Using Makefile
+
+The project includes a Makefile with common commands for building, running, and testing the CLI tool:
+
+```bash
+# Show available commands
+make help
+
+# Local development commands (開発用)
+make build        # Build the application locally
+make install      # Install the binary locally
+make test         # Run tests locally
+make fmt          # Format code locally
+make lint         # Lint code locally
+make clean        # Clean build artifacts
+
+# CLI commands (Docker を使用)
+# These commands will build the binary inside a Docker container and execute it
+make list                         # List repositories
+make list-all                     # List all repositories
+make list-json                    # List repositories in JSON format
+make delete REPO=owner/repo       # Delete a repository with confirmation
+make delete-force REPO=owner/repo # Delete a repository without confirmation
+```
+
+#### Building the Application Manually
 
 ```bash
 # Build the application
@@ -55,21 +81,33 @@ go install github.com/cosmtrek/air@latest
 
 # Run with Air for hot reloading
 air
+
+# Or using the Makefile
+make dev
 ```
 
 ### Method 2: Docker Development
 
-#### Using Docker Compose
+#### Using Docker for CLI Commands
+
+The Makefile provides targets that use Docker to build and run the CLI commands:
 
 ```bash
-# Build and start the containers
-docker-compose up -d app
-
-# The app container will run the CLI with --help by default
-# You can run other commands in the container:
-docker-compose exec app /go/bin/githubcli list
-docker-compose exec app /go/bin/githubcli delete yourusername/test-repo
+# Run CLI commands using Docker
+make list
+make list-all
+make list-json
+make delete REPO=owner/repo
+make delete-force REPO=owner/repo
 ```
+
+Under the hood, these commands:
+1. Create a temporary Docker container
+2. Build the binary inside the container
+3. Execute the command
+4. Remove the container when done
+
+This approach ensures a clean environment for each command execution.
 
 #### Development Container with Hot Reloading (Air)
 
@@ -77,14 +115,13 @@ The Docker Compose configuration includes a `dev` service that automatically set
 
 ```bash
 # Start the development container with Air for hot reloading
-docker-compose up dev
+make dev
+
+# Wait for the container to fully start and Air to initialize
+# You should see output indicating that Air is watching for changes
 
 # Air will automatically rebuild and restart the application when code changes are detected
-# The binary is available at /app/tmp/main
-
-# In another terminal, you can execute commands on the running binary
-docker-compose exec dev /app/tmp/main --help
-docker-compose exec dev /app/tmp/main list
+# The binary is available at /go/src/app/tmp/main
 ```
 
 This setup includes:
@@ -111,9 +148,9 @@ This setup includes:
 With Docker:
 
 ```bash
-docker-compose exec app /go/bin/githubcli list
-docker-compose exec app /go/bin/githubcli list --all
-docker-compose exec app /go/bin/githubcli list --json
+make list
+make list-all
+make list-json
 ```
 
 ### 2. Testing the Delete Command
@@ -131,8 +168,8 @@ docker-compose exec app /go/bin/githubcli list --json
 With Docker:
 
 ```bash
-docker-compose exec app /go/bin/githubcli delete yourusername/test-repo
-docker-compose exec app /go/bin/githubcli delete yourusername/test-repo --force
+make delete REPO=yourusername/test-repo
+make delete-force REPO=yourusername/test-repo
 ```
 
 ### 3. Creating Test Repositories for Safe Testing
